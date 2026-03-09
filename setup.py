@@ -6,7 +6,7 @@ with open("requirements.txt") as f:
 requirements = [x.strip() for x in content if "git+" not in x]
 
 setup(name='dfake_api',
-      version="0.0.12",
+      version="0.0.1",
       description="Deep Fake Image Model (API)",
       license="MIT",
       author="DV",
