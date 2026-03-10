@@ -12,3 +12,4 @@ uvicorn         # web server
 
 #image utils requirements
 scikit-image
+python-multipart
