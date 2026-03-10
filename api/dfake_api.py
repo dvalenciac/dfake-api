@@ -3,6 +3,9 @@
 import sys
 import os
 import shutil
+import io
+import base64
+from PIL import Image
 from helper import params
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
@@ -31,13 +34,12 @@ def root():
         'API': 'OK'
     }
 
-@app.post("/predict/")
+@app.post("/predict_image/")
 async def predict(file: UploadFile = File(...)):
     """
     Upload an image file and return a probability percentage that it's a Fake image
     """
     try:
-        print(file.content_type)
         if file.content_type is not None:
             if not file.content_type.startswith("image/"):
                 raise HTTPException(status_code=400, detail="File must be an image")
@@ -60,10 +62,13 @@ async def predict(file: UploadFile = File(...)):
         # "filename": file.filename,
         #         "content_type": file.content_type,
         #         "file_size": file_path.stat().st_size
+        predict_value = 0.51
+        fake_real = params.RESULTS[0]
         return JSONResponse(
             status_code=200,
             content={
-                "result": 0.5,                
+                "fake_real":  fake_real,
+                "predict_value": predict_value,                
             }
         )
     
@@ -75,7 +80,7 @@ async def predict(file: UploadFile = File(...)):
         file.file.close()
 
 
-@app.post("/predict-hm/")
+@app.post("/generate_heatmap/")
 async def predict_heatmap(file: UploadFile = File(...)):
     """
     Upload an image file and 
@@ -85,7 +90,6 @@ async def predict_heatmap(file: UploadFile = File(...)):
             * A heatmap image (size = params.IMAGE_SIZE)  
     """
     try:
-        print(file.content_type)
         if file.content_type is not None:
             if not file.content_type.startswith("image/"):
                 raise HTTPException(status_code=400, detail="File must be an image")
@@ -105,15 +109,36 @@ async def predict_heatmap(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # "filename": file.filename,
-        #         "content_type": file.content_type,
-        #         "file_size": file_path.stat().st_size
-        return JSONResponse(
-            status_code=200,
-            content={
-                "result": 0.5,                
-            }
-        )
+        # Open image with PIL
+        #TODO get the real image
+        test_response = "test/img/00A0WLZE5X.jpg"
+        img = Image.open(test_response)
+        
+        # Convert to numpy array for processing
+        #img_array = np.array(img)
+
+        # Modify image (example: convert to grayscale)
+        if img.mode != 'L':
+            img_processed = img.convert('L')
+        else:
+            img_processed = img
+
+        # Save processed image to bytes
+        img_byte_arr = io.BytesIO()
+        img_processed.save(img_byte_arr, format='PNG')
+        img_byte_arr = img_byte_arr.getvalue()
+        
+        # Encode image as base64
+        img_base64 = base64.b64encode(img_byte_arr).decode('utf-8')
+        predict_value = 0.51
+        fake_real = params.RESULTS[0]
+        return {
+            "fake_real":  fake_real,
+            "predict_value": predict_value,
+            "image_resized": img_base64,
+            "heatmap": img_base64,
+        }
+        
     
     except Exception as e:
         type, value, traceback = sys.exc_info()

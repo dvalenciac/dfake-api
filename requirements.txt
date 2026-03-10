@@ -1,7 +1,8 @@
 #test requirements
 pytest
 Pillow
-
+httpx<0.28
+pytest-asyncio
 
 
 # API requirements
