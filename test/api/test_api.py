@@ -63,7 +63,7 @@ async def test_predict_hm():
         img = Image.open(io.BytesIO(img_data))
         img.save('image_resized.png')
 
-        img_data = base64.b64decode(json_result['image_resized'])
+        img_data = base64.b64decode(json_result['heatmap'])
         img_hm = Image.open(io.BytesIO(img_data))
         img_hm.save('heatmap.png')
         
