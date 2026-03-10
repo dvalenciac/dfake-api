@@ -24,8 +24,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-
-
 @app.get("/")
 def root():
     """ API Health check 
@@ -37,7 +35,10 @@ def root():
 @app.post("/predict_image/")
 async def predict(file: UploadFile = File(...)):
     """
-    Upload an image file and return a probability percentage that it's a Fake image
+    Upload an image file(acepted types: '.jpg', '.jpeg', '.png', '.gif', '.bmp')  
+        return :
+            "fake_real":  FAKE or REAL
+            "predict_value": A probability between 0 and 1 that it's a Fake image (1 = FAKE, 0 = REAL) 
     """
     try:
         if file.content_type is not None:
@@ -83,11 +84,12 @@ async def predict(file: UploadFile = File(...)):
 @app.post("/generate_heatmap/")
 async def predict_heatmap(file: UploadFile = File(...)):
     """
-    Upload an image file and 
+    Upload an image file(acepted types: '.jpg', '.jpeg', '.png', '.gif', '.bmp')  
         return :
-            * A probability percentage that it's a Fake image
-            * The original image, resized to params.IMAGE_SIZE
-            * A heatmap image (size = params.IMAGE_SIZE)  
+            "fake_real":  FAKE or REAL
+            "predict_value": A probability between 0 and 1 that it's a Fake image (1 = FAKE, 0 = REAL) 
+            "image_resized":  The original image, resized to 256x256,
+            "heatmap": A heatmap image, resized to 256x256,            
     """
     try:
         if file.content_type is not None:
