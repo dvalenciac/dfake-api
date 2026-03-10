@@ -2,11 +2,11 @@
 #import pandas as pd
 import sys
 import os
-import shutil
 import io
 import base64
 from PIL import Image
 from helper import params
+from helper.images import resize_image
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -52,13 +52,17 @@ async def predict(file: UploadFile = File(...)):
             # Validate file type
             if file_extension not in allowed_extensions:
                 raise HTTPException(status_code=400, detail="File must be an image")
-        
+        contents = file.file
+        image = Image.open(contents)
+
+        processed_image = resize_image(image)
         # Create file path
         file_path = params.UPLOAD_DIR / file.filename
         
         # Save the file
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # with open(file_path, "wb") as buffer:
+        #     #shutil.copyfileobj(file.file, buffer)
+        #     shutil.copyfileobj(processed_image, buffer)
         
         # "filename": file.filename,
         #         "content_type": file.content_type,
@@ -104,41 +108,43 @@ async def predict_heatmap(file: UploadFile = File(...)):
             if file_extension not in allowed_extensions:
                 raise HTTPException(status_code=400, detail="File must be an image")
         
-        # Create file path
-        file_path = params.UPLOAD_DIR / file.filename
-        
-        # Save the file
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        
+        contents = file.file
+        image = Image.open(contents)
+
+        #image processed 
+        processed_image = resize_image(image)
+
+        #heat map
         # Open image with PIL
-        #TODO get the real image
-        test_response = "test/img/00A0WLZE5X.jpg"
-        img = Image.open(test_response)
+        heatmap_img = processed_image
         
         # Convert to numpy array for processing
         #img_array = np.array(img)
 
         # Modify image (example: convert to grayscale)
-        if img.mode != 'L':
-            img_processed = img.convert('L')
+        if heatmap_img.mode != 'L':
+            img_processed = heatmap_img.convert('L')
         else:
-            img_processed = img
+            img_processed = heatmap_img
 
-        # Save processed image to bytes
+        # Encode image as base64
+        #converts images to bytes 
+        img_byte_arr = io.BytesIO()
+        processed_image.save(img_byte_arr, format='PNG')
+        img_byte_arr = img_byte_arr.getvalue()      
+        img_proc_base64 = base64.b64encode(img_byte_arr).decode('utf-8')
+
         img_byte_arr = io.BytesIO()
         img_processed.save(img_byte_arr, format='PNG')
         img_byte_arr = img_byte_arr.getvalue()
-        
-        # Encode image as base64
-        img_base64 = base64.b64encode(img_byte_arr).decode('utf-8')
+        heatmap_base64 = base64.b64encode(img_byte_arr).decode('utf-8')
         predict_value = 0.51
         fake_real = params.RESULTS[0]
         return {
             "fake_real":  fake_real,
             "predict_value": predict_value,
-            "image_resized": img_base64,
-            "heatmap": img_base64,
+            "image_resized": img_proc_base64,
+            "heatmap": heatmap_base64,
         }
         
     
