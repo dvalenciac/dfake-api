@@ -1,0 +1,16 @@
+#test requirements
+pytest
+Pillow
+httpx<0.28
+pytest-asyncio
+
+
+# API requirements
+fastapi         # API framework
+pytz            # time zone management
+uvicorn         # web server
+
+
+#image utils requirements
+scikit-image
+python-multipart

@@ -208,3 +208,9 @@ __marimo__/
 
 
 .python-version
+
+.vscode
+
+uploads/
+heatmap.png
+image_resized.png
