@@ -17,3 +17,12 @@ test_api_predict:
 test_api_predict_hm:
 	pytest \
 	test/api/test_api.py::test_predict_hm --asyncio-mode=strict -W "ignore" 
+
+
+default: pylint pytest
+
+pylint:
+	find . -iname "*.py" -not -path "./test/*" | xargs -n1 -I {}  pylint --output-format=colorized {}; true
+
+pytest:
+	PYTHONDONTWRITEBYTECODE=1 pytest -v --color=yes

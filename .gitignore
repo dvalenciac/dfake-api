@@ -212,5 +212,6 @@ __marimo__/
 .vscode
 
 uploads/
+model/
 heatmap.png
 image_resized.png
