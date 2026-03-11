@@ -7,6 +7,8 @@ import base64
 from PIL import Image
 from helper import params
 from helper.images import resize_image
+from helper.registry import load_model, get_response
+from keras.preprocessing.image import img_to_array
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +30,8 @@ app.add_middleware(
 def root():
     """ API Health check 
     """
+    if app.model is None:
+        app.model =  load_model()
     return {
         'API': 'OK'
     }
@@ -40,6 +44,15 @@ async def predict(file: UploadFile = File(...)):
             "fake_real":  FAKE or REAL
             "predict_value": A probability between 0 and 1 that it's a Fake image (1 = FAKE, 0 = REAL) 
     """
+    if app.model is None:
+        app.model =  load_model()
+        if app.model is None:
+            return JSONResponse(
+                    status_code=500,
+                    content={
+                        "ERROR":  "Error loading model."  
+                    }
+                )
     try:
         if file.content_type is not None:
             if not file.content_type.startswith("image/"):
@@ -54,27 +67,30 @@ async def predict(file: UploadFile = File(...)):
                 raise HTTPException(status_code=400, detail="File must be an image")
         contents = file.file
         image = Image.open(contents)
-
         processed_image = resize_image(image)
-        # Create file path
-        file_path = params.UPLOAD_DIR / file.filename
+
+        X_pred = img_to_array(processed_image)
+    
+        shape = X_pred.shape
+        if shape != params.IMAGE_SIZE + (3,):
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "ERROR":  "The image size is not as expected.",
+                    "expected": params.IMAGE_SIZE + (3,), 
+                    "received": shape,                
+                }
+            )
+        shape = (-1,) + shape
+        print(shape)
         
-        # Save the file
-        # with open(file_path, "wb") as buffer:
-        #     #shutil.copyfileobj(file.file, buffer)
-        #     shutil.copyfileobj(processed_image, buffer)
+        X_pred = X_pred.reshape(shape)
+        y_pred = app.model.predict(X_pred)
         
-        # "filename": file.filename,
-        #         "content_type": file.content_type,
-        #         "file_size": file_path.stat().st_size
-        predict_value = 0.51
-        fake_real = params.RESULTS[0]
+        content = get_response(y_pred)
         return JSONResponse(
             status_code=200,
-            content={
-                "fake_real":  fake_real,
-                "predict_value": predict_value,                
-            }
+            content=content
         )
     
     except Exception as e:
@@ -95,6 +111,8 @@ async def predict_heatmap(file: UploadFile = File(...)):
             "image_resized":  The original image, resized to 256x256,
             "heatmap": A heatmap image, resized to 256x256,            
     """
+    if app.model is None:
+        app.model =  load_model()
     try:
         if file.content_type is not None:
             if not file.content_type.startswith("image/"):
