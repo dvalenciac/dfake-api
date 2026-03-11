@@ -5,6 +5,10 @@ reinstall_package:
 run_api:
 	uvicorn api.dfake_api:app --reload
 
+
+run_interface:
+	python interface/main.py 
+
 test_api_health:
 	pytest \
 	test/api/test_api.py::test_API_health --asyncio-mode=strict -W "ignore" 
