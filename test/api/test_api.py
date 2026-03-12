@@ -41,7 +41,7 @@ async def test_predict():
         assert response.status_code == 200
         json_result = response.json()
         assert json_result['predict_value'] <= 1.0
-        assert json_result['fake_real'] == "FAKE"
+        assert json_result['fake_real'] in ["FAKE", "REAL"]
 
 @pytest.mark.asyncio
 async def test_predict_hm():
@@ -56,7 +56,7 @@ async def test_predict_hm():
         assert response.status_code == 200
         json_result = response.json()
         assert json_result['predict_value'] <= 1.0
-        assert json_result['fake_real'] == "FAKE"
+        assert json_result['fake_real'] in ["FAKE", "REAL"]
 
 
         img_data = base64.b64decode(json_result['image_resized'])

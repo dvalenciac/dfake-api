@@ -24,8 +24,8 @@ def load_model(stage="Production") -> keras.Model:
 
         # Get the latest model version name by the timestamp on disk
 
-        local_model = MODEL_NAME if MODEL_NAME else ""
-        model_path = LOCAL_MODEL_PATH if LOCAL_MODEL_PATH else ""
+        local_model = MODEL_NAME
+        model_path = LOCAL_MODEL_PATH 
         local_model = os.path.join(model_path, local_model)
 
         if not local_model:

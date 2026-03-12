@@ -1,12 +1,19 @@
+"""
+Setup program to install the API
+"""
 from setuptools import find_packages
 from setuptools import setup
+
+
+PR_NAME='dfake_api'
+VERSION='0.0.2'
 
 with open("requirements.txt") as f:
     content = f.readlines()
 requirements = [x.strip() for x in content if "git+" not in x]
 
-setup(name='dfake_api',
-      version="0.0.1",
+setup(name=PR_NAME,
+      version=VERSION,
       description="Deep Fake Image Model (API)",
       license="MIT",
       author="DV",
@@ -14,7 +21,7 @@ setup(name='dfake_api',
       url="https://github.com/dvalenciac/dfake-api",
       install_requires=requirements,
       packages=find_packages(),
-      test_suite="tests",
+      test_suite="test",
       # include_package_data: to install data from MANIFEST.in
       include_package_data=True,
       zip_safe=False)
