@@ -1,13 +1,13 @@
 FROM python:3.12-slim
 
-COPY api /dfake-api/api
-COPY helper /dfake-api/helper
-COPY /model/baseline.joblib /dfake-api/model/baseline.joblib 
+COPY api /api
+COPY helper /helper
+COPY /model/baseline.joblib /model/baseline.joblib 
 
-COPY setup.py  /dfake-api/setup.py 
-COPY requirements.txt /dfake-api/requirements.txt
+COPY setup.py  /setup.py 
+COPY requirements.txt /requirements.txt
 
 RUN pip install --upgrade pip
-RUN pip install -r /dfake-api/requirements.txt
+RUN pip install -r /requirements.txt
 
-CMD uvicorn dfake-api.api.dfake_api:app --host 0.0.0.0
+CMD uvicorn api.dfake_api:app --host 0.0.0.0

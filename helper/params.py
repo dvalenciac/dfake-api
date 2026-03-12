@@ -11,8 +11,8 @@ RESULTS = ["FAKE", "REAL"]
 TRIGGER_VALUE = 0.51
 
 MODEL_TARGET = os.environ.get("MODEL_TARGET")
+MODEL_NAME = os.environ.get("MODEL_NAME")
 LOCAL_MODEL_PATH = os.environ.get("LOCAL_MODEL_PATH")
-
 
 #upload folder
 #UPLOAD_DIR = Path("uploads")
