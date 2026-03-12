@@ -1,9 +1,9 @@
 """"
 Helper module that contains the load_model and predict functions 
 """
-import glob
-from helper.params import MODEL_TARGET, LOCAL_MODEL_PATH, TRIGGER_VALUE, RESULTS
-
+from helper.params import MODEL_TARGET, LOCAL_MODEL_PATH
+from helper.params import MODEL_NAME, TRIGGER_VALUE, RESULTS
+import os
 from colorama import Fore, Style
 import numpy as np
 from tensorflow import keras
@@ -23,7 +23,10 @@ def load_model(stage="Production") -> keras.Model:
         print(Fore.BLUE + f"\nLoad latest model from local registry..." + Style.RESET_ALL)
 
         # Get the latest model version name by the timestamp on disk
-        local_model = LOCAL_MODEL_PATH
+
+        local_model = MODEL_NAME
+        model_path = LOCAL_MODEL_PATH 
+        local_model = os.path.join(model_path, local_model)
 
         if not local_model:
             return None
