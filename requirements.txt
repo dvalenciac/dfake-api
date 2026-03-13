@@ -18,7 +18,7 @@ python-multipart==0.0.22
 
 #model requirements
 tensorflow==2.16.2
-keras==3.11.3
+keras==3.13.2
 numpy==1.26.4
 joblib==1.5.3
 

@@ -74,15 +74,15 @@ async def predict(file: UploadFile = File(...),
             "predict_value": A probability between 0 and 1 that it's a Fake image (1 = FAKE, 0 = REAL) 
     """
     headers = request.headers
-    token = headers.get("token")
-    # If there is no token or it does not match --> Error
-    if params.TOKEN != token:
-        return JSONResponse(
-                    status_code=400,
-                    content={
-                        "ERROR":  "Misisng or wrong token."  
-                    }
-                )
+    # token = headers.get("token")
+    # # If there is no token or it does not match --> Error
+    # if params.TOKEN != token:
+    #     return JSONResponse(
+    #                 status_code=400,
+    #                 content={
+    #                     "ERROR":  "Misisng or wrong token."  
+    #                 }
+    #             )
     
     if app.model is None:
         app.model =  load_model()
