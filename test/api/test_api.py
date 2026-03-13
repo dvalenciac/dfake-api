@@ -13,8 +13,10 @@ TEST_IMG = 'test/img/IMG_20240329_131211031.jpg'
 
 # Basic upload
 HEALTH_EP = "/"
+RELOAD_EP = "/reload/"
 PREDICT_EP = "/predict_image/"
 PREDICT_HM_EP = "/generate_heatmap/"
+TOKEN="c2679915e176ee74332779c1ed1792bd"
 
 @pytest.mark.asyncio
 async def test_API_health():
@@ -27,7 +29,22 @@ async def test_API_health():
         assert response.status_code == 200
         json_result = response.json()
         assert json_result['API'] == 'OK'
+
+@pytest.mark.asyncio
+async def test_reload():
+    """
+    Test Reload model
+    """
+    breakpoint()
     
+    url = RELOAD_EP
+    async with AsyncClient(base_url=SERVICE_URL, timeout=10) as ac:
+        headers = {'token': TOKEN}
+        response = await ac.post(url, headers=headers)
+        assert response.status_code == 200
+        json_result = response.json()
+        assert json_result['API'] == 'OK'
+
 @pytest.mark.asyncio
 async def test_predict():
     """
@@ -35,9 +52,10 @@ async def test_predict():
     """
     url = PREDICT_EP
     async with AsyncClient(base_url=SERVICE_URL, timeout=10) as ac:
+        headers = {'token': TOKEN}
         files = {'file': open(TEST_IMG, 'rb')}
 
-        response = await ac.post(url, files=files) 
+        response = await ac.post(url, files=files, headers=headers) 
         assert response.status_code == 200
         json_result = response.json()
         assert json_result['predict_value'] <= 1.0
@@ -50,9 +68,10 @@ async def test_predict_hm():
     """
     url = PREDICT_HM_EP
     async with AsyncClient(base_url=SERVICE_URL, timeout=10) as ac:
+        headers = {'token': TOKEN}
         files = {'file': open(TEST_IMG, 'rb')}
 
-        response = await ac.post(url, files=files) 
+        response = await ac.post(url, files=files, headers=headers) 
         assert response.status_code == 200
         json_result = response.json()
         assert json_result['predict_value'] <= 1.0

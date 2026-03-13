@@ -9,7 +9,7 @@ from helper import params
 from helper.images import resize_image
 from helper.registry import load_model, get_response
 from keras.preprocessing.image import img_to_array
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -36,14 +36,54 @@ def root():
         'API': 'OK'
     }
 
+@app.post("/reload/")
+def reload(request: Request):
+    """ API Reload model 
+    """
+    headers = request.headers
+    token = headers.get("token")
+    # If there is no token or it does not match --> Error
+    if params.TOKEN != token:
+        return JSONResponse(
+                    status_code=400,
+                    content={
+                        "ERROR":  "Misisng or wrong token."  
+                    }
+                )
+    
+    app.model =  load_model()
+    if app.model is None:
+            return JSONResponse(
+                    status_code=500,
+                    content={
+                        "ERROR":  "Error loading model."  
+                    }
+                )
+    else:
+        return {
+            'API': 'OK'
+        }
+
 @app.post("/predict_image/")
-async def predict(file: UploadFile = File(...)):
+async def predict(file: UploadFile = File(...),
+                  request: Request=None):
     """
     Upload an image file(acepted types: '.jpg', '.jpeg', '.png', '.gif', '.bmp')  
         return :
             "fake_real":  FAKE or REAL
             "predict_value": A probability between 0 and 1 that it's a Fake image (1 = FAKE, 0 = REAL) 
     """
+    headers = request.headers
+    token = headers.get("token")
+    # If there is no token or it does not match --> Error
+    if params.TOKEN != token:
+        return JSONResponse(
+                    status_code=400,
+                    content={
+                        "ERROR":  "Misisng or wrong token."  
+                    }
+                )
+    
     if app.model is None:
         app.model =  load_model()
         if app.model is None:
@@ -67,6 +107,7 @@ async def predict(file: UploadFile = File(...)):
                 raise HTTPException(status_code=400, detail="File must be an image")
         contents = file.file
         image = Image.open(contents)
+        #image processed 
         processed_image = resize_image(image)
 
         X_pred = img_to_array(processed_image)
@@ -82,7 +123,6 @@ async def predict(file: UploadFile = File(...)):
                 }
             )
         shape = (-1,) + shape
-        print(shape)
         
         X_pred = X_pred.reshape(shape)
         y_pred = app.model.predict(X_pred)
@@ -102,7 +142,8 @@ async def predict(file: UploadFile = File(...)):
 
 
 @app.post("/generate_heatmap/")
-async def predict_heatmap(file: UploadFile = File(...)):
+async def predict_heatmap(file: UploadFile = File(...),
+                  request: Request=None):
     """
     Upload an image file(acepted types: '.jpg', '.jpeg', '.png', '.gif', '.bmp')  
         return :
@@ -111,8 +152,26 @@ async def predict_heatmap(file: UploadFile = File(...)):
             "image_resized":  The original image, resized to 256x256,
             "heatmap": A heatmap image, resized to 256x256,            
     """
+    headers = request.headers
+    token = headers.get("token")
+    # If there is no token or it does not match --> Error
+    if params.TOKEN != token:
+        return JSONResponse(
+                    status_code=400,
+                    content={
+                        "ERROR":  "Misisng or wrong token."  
+                    }
+                )
+    
     if app.model is None:
         app.model =  load_model()
+        if app.model is None:
+            return JSONResponse(
+                    status_code=500,
+                    content={
+                        "ERROR":  "Error loading model."  
+                    }
+                )
     try:
         if file.content_type is not None:
             if not file.content_type.startswith("image/"):
@@ -128,10 +187,26 @@ async def predict_heatmap(file: UploadFile = File(...)):
         
         contents = file.file
         image = Image.open(contents)
-
         #image processed 
         processed_image = resize_image(image)
 
+        X_pred = img_to_array(processed_image)
+    
+        shape = X_pred.shape
+        if shape != params.IMAGE_SIZE + (3,):
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "ERROR":  "The image size is not as expected.",
+                    "expected": params.IMAGE_SIZE + (3,), 
+                    "received": shape,                
+                }
+            )
+        shape = (-1,) + shape
+        
+        X_pred = X_pred.reshape(shape)
+        y_pred = app.model.predict(X_pred)
+        
         #heat map
         # Open image with PIL
         heatmap_img = processed_image
@@ -156,15 +231,15 @@ async def predict_heatmap(file: UploadFile = File(...)):
         img_processed.save(img_byte_arr, format='PNG')
         img_byte_arr = img_byte_arr.getvalue()
         heatmap_base64 = base64.b64encode(img_byte_arr).decode('utf-8')
-        predict_value = 0.51
-        fake_real = params.RESULTS[0]
-        return {
-            "fake_real":  fake_real,
-            "predict_value": predict_value,
-            "image_resized": img_proc_base64,
-            "heatmap": heatmap_base64,
-        }
         
+        content = get_response(y_pred)
+
+        content["image_resized"] = img_proc_base64
+        content["heatmap"] = heatmap_base64
+        return JSONResponse(
+            status_code=200,
+            content=content
+        )
     
     except Exception as e:
         type, value, traceback = sys.exc_info()

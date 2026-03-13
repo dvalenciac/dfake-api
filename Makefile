@@ -13,6 +13,9 @@ test_api_health:
 	pytest \
 	test/api/test_api.py::test_API_health --asyncio-mode=strict -W "ignore" 
 
+test_api_reload:
+	pytest \
+	test/api/test_api.py::test_reload --asyncio-mode=strict -W "ignore" 
 
 test_api_predict:
 	pytest \
