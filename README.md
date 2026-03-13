@@ -39,4 +39,6 @@ The .env has changed use the model .env.sample
     headers = {'token': TOKEN}
     r = httpx.get(url, headers=headers)
 
+When the service is up in GCP, it needs at least 8GiB and 2 CPUs to run the model
+
     

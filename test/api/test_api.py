@@ -4,19 +4,20 @@ Test API Module
 import pytest
 import base64
 import io
+import os
 from PIL import Image
 from httpx import AsyncClient
 
-SERVICE_URL = "http://localhost:8000"
+SERVICE_URL = os.environ.get("SERVICE_URL")
+TOKEN=os.environ.get("CONN_TOKEN").strip()
 
 TEST_IMG = 'test/img/IMG_20240329_131211031.jpg'
 
-# Basic upload
 HEALTH_EP = "/"
 RELOAD_EP = "/reload/"
 PREDICT_EP = "/predict_image/"
 PREDICT_HM_EP = "/generate_heatmap/"
-TOKEN="c2679915e176ee74332779c1ed1792bd"
+TIMEOUT = 30
 
 @pytest.mark.asyncio
 async def test_API_health():
@@ -24,7 +25,7 @@ async def test_API_health():
     Test API health
     """
     url = HEALTH_EP
-    async with AsyncClient(base_url=SERVICE_URL, timeout=10) as ac:
+    async with AsyncClient(base_url=SERVICE_URL, timeout=TIMEOUT) as ac:
         response = await ac.get(url) 
         assert response.status_code == 200
         json_result = response.json()
@@ -35,10 +36,8 @@ async def test_reload():
     """
     Test Reload model
     """
-    breakpoint()
-    
     url = RELOAD_EP
-    async with AsyncClient(base_url=SERVICE_URL, timeout=10) as ac:
+    async with AsyncClient(base_url=SERVICE_URL, timeout=TIMEOUT) as ac:
         headers = {'token': TOKEN}
         response = await ac.post(url, headers=headers)
         assert response.status_code == 200
@@ -51,7 +50,7 @@ async def test_predict():
     Test Predict
     """
     url = PREDICT_EP
-    async with AsyncClient(base_url=SERVICE_URL, timeout=10) as ac:
+    async with AsyncClient(base_url=SERVICE_URL, timeout=TIMEOUT) as ac:
         headers = {'token': TOKEN}
         files = {'file': open(TEST_IMG, 'rb')}
 
@@ -67,7 +66,7 @@ async def test_predict_hm():
     Test Predict Heat MAP
     """
     url = PREDICT_HM_EP
-    async with AsyncClient(base_url=SERVICE_URL, timeout=10) as ac:
+    async with AsyncClient(base_url=SERVICE_URL, timeout=TIMEOUT) as ac:
         headers = {'token': TOKEN}
         files = {'file': open(TEST_IMG, 'rb')}
 
